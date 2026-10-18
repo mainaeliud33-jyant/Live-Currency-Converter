@@ -2,7 +2,6 @@
 
 **Live Currency Converter** is a single-page web application that fetches real-time financial data to display exact conversion rates between major global currencies. 
 
-## Why It Exists
 Currency values shift rapidly due to shifting international market conditions. This application provides a lightweight, front-end solution to quickly track conversion rates without heavy backend requirements or continuous page reloads. It serves as an intuitive interface for assessing instant financial valuations.
 
 ## Core Features
