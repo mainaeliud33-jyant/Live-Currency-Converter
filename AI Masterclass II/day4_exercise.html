@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Country Info</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #1F4E79; }
+    #result { background: #f7f9fc; border: 1px solid #d0dff0; border-radius: 8px; padding: 20px; margin-top: 20px; }
+    button { background: #2E75B6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #1F4E79; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="margin-top: 0; color: #2d3748;">Live Currency Converter</h2>
+    
+    <div class="form-group">
+        <label for="baseCurrency">From:</label>
+        <select id="baseCurrency">
+            <option value="USD">USD - US Dollar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="KES">KES - Kenyan Shilling</option>
+            <option value="TZS">TZS - Tanzanian Shilling</option>
+            <!-- Selecting this value forces an error response from the API -->
+            <option value="INVALID_CODE">ERR - Force Error State</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="targetCurrency">To:</label>
+        <select id="targetCurrency">
+            <option value="KES">KES - Kenyan Shilling</option>
+            <option value="USD">USD - US Dollar</option>
+            <option value="EUR">EUR - Euro</option>
+            <option value="TZS">TZS - Tanzanian Shilling</option>
+        </select>
+    </div>
+
+    <button onclick="getExchangeRate()">Convert Balance</button>
+
+    <div id="outputWindow"></div>
+</div>
+
+<script>
+async function getExchangeRate() {
+    const baseElement = document.getElementById('baseCurrency');
+    const targetElement = document.getElementById('targetCurrency');
+    const outputWindow = document.getElementById('outputWindow');
+    
+    const fromCurrency = baseElement.value;
+    const toCurrency = targetElement.value;
+
+    // Requirement: Shows "Loading..." before the request completes
+    outputWindow.className = "status-box loading";
+    outputWindow.innerText = "⏳ Loading market rates...";
+
+
+  try {
+        // Requirement: Uses fetch() with async/await (Public API, no key required)
+        const response = await fetch(`https://er-api.com{fromCurrency}`);
+        
+        if (!response.ok) {
+            throw new Error(`Network issue. Server status: ${response.status}`);
+        }
+
+        const payload = await response.json();
+
+         // Check if the API returned a structural failure field
+        if (payload.result === "error") {
+            throw new Error(payload["error-type"] || "Invalid base currency parameters.");
+        }
+
+        const calculationRate = payload.rates[toCurrency];
+
+        if (calculationRate === undefined) {
+            throw new Error(`Target identifier code '${toCurrency}' was not found in the index.`);
+        }
+
+        // Requirement: Displays clean, formatted output when the request succeeds
+        outputWindow.className = "status-box success";
+        outputWindow.innerHTML = `
+            <div style="font-size: 13px; color: #718096; margin-bottom: 4px;">Live Exchange Valuation</div>
+            <div style="font-size: 22px; font-weight: bold; color: #2b6cb0;">
+                1 ${fromCurrency} = ${calculationRate.toFixed(4)} ${toCurrency}
+            </div>
+        `;
+
+    } catch (error) {
+        // Requirement: Shows a clear error message when the request fails (test by entering a bad value)
+        outputWindow.className = "status-box error";
+        outputWindow.innerText = `Error: ${error.message}`;
+    }
+}
+
+// Initial fetch on viewport generation
+getExchangeRate();
+</script>
+
+</body>
+</html>
