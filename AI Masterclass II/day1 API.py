@@ -1,32 +1,36 @@
 import requests
 
-# 1. This endpoint request specifically targets Kenya
-url = 'https://restcountries.com'
-headers = {'Authorization': 'Bearer rc_live_262af9d1a1ec4f5a858c856c89609a31'}
+country = "Kenya"
 
-response = requests.get(url, headers=headers)
+# Fixed URL string with explicit structural forward slashes
+url = f"https://restcountries.com{country}"
 
-if response.status_code == 200:
-    payload = response.json()
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+}
+
+try:
+    response = requests.get(url, headers=headers, timeout=10)
     
-    # 2. Extract the country list from the v5 data key dictionary wrapper
-    countries_list = payload.get("data", [])
-    
-    if countries_list:
-        # Grab the first matching country array dictionary entry
-        country = countries_list[0]
+    if response.status_code == 200:
+        # The API returns data wrapped inside a list: [ {...} ]
+        data = response.json()[0] 
+        
+        official_name = data["name"]["official"]
+        # Capital is provided as a list, grab the first element
+        capital = data["capital"][0] if "capital" in data else "N/A"
+        population = data["population"]
+        
+        print(f"Data for {country}:")
+        print(f"- Official Name: {official_name}")
+        print(f"- Capital City: {capital}")
+        print(f"- Population: {population:,}")
 
-        # 3. Pull details using the new v5 property architecture layout
-        name = country["names"]["common"]
-        capital = country["capitals"][0]["name"]
-        population = country["population"]
-        currency = country["currencies"][0]["code"]
-
-        print(f"Country: {name}")
-        print(f"Capital: {capital}")
-        print(f"Population: {population:,}")
-        print(f"Currency: {currency}")
+    elif response.status_code == 404:
+        print(f"Country not found: {country}")
     else:
-        print("No country data found in the response matching 'kenya'.")
-else:
-    print("Request failed. Status:", response.status_code)
+        print(f"Unexpected error: {response.status_code}")
+
+except requests.exceptions.ConnectionError as e:
+    print("❌ Network Error: Failed to resolve the web address.")
+    print(f"Details: {e}")
